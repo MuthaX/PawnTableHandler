@@ -1,144 +1,104 @@
-#define __TABLEHANDLER_INCLUDED__
+# PawnTableHandler  
+Procedures for loading and saving tables from/into different sources using only structure description.  
 
-#if !defined TABLEHANDLER_MAX_STRING_SIZE
-	#define TABLEHANDLER_MAX_STRING_SIZE	(2048)
-#endif
-#if !defined TABLEHANDLER_MAX_COLUMNS
-	#define TABLEHANDLER_MAX_COLUMNS		(64)
-#endif
-#if !defined TABLEHANDLER_MAX_DBFIELD_NAME
-	#define TABLEHANDLER_MAX_DBFIELD_NAME	(32)
-#endif
+## Defines  
+**\_\_TABLEHANDLER_INCLUDED\_\_** - used for determinate use of PawnTableHandler.  
+**TABLEHANDLER_MAX_STRING_SIZE** - maximum size of buffered string when reading file through fread. Default size 2048 cells. Can be defined with custom value.  
+**TABLEHANDLER_MAX_COLUMNS** - maximum number of columns in procedures that are using fread. Default number of columns is 64. Can be defined with custom value.  
+**TABLEHANDLER_MAX_DBFIELD_NAME** - maximum size of db-field name in table structure. Default size is 32 cells. Can be defined with custom value.  
+**TABLEHANDLER_STRUCTTEST_DISABLE** - define it by yourself to disable checking table structure before handling table. May be useful at production state (undefine while debugging).  
 
-#if TABLEHANDLER_MAX_STRING_SIZE < 1
-	#error TABLEHANDLER_MAX_STRING_SIZE must be greater than zero!
-#endif
-#if TABLEHANDLER_MAX_COLUMNS < 1
-	#error TABLEHANDLER_MAX_COLUMNS must be greater than zero!
-#endif
-#if TABLEHANDLER_MAX_DBFIELD_NAME < 1
-	#error TABLEHANDLER_MAX_DBFIELD_NAME must be greater than zero!
-#endif
-/*
-Example of definition table structure.
+## Table structure model  
+**E_TABLEDATA_TYPE** - (character) defines row id, decimal integer, float, hex, string, ...;  
+**E_TABLEDATA_OFFSET** - defines offset in array;  
+**E_TABLEDATA_PRECISION** - defines number of digits after dot at writing float;  
+**E_TABLEDATA_SIZE** - defines width for integers and cells for strings;  
+**E_TABLEDATA_DB_FIELD_NAME** - defines name to access db field(column);  
+
+## Allowed data types  
+Put as character where it used.  
+> * @ - Integer, that points at row in destination array, **have to be only in first column**;  
+> * d - Integer (decimal);  
+> * f - Float;  
+> * h - Integer (hex);  
+> * s - String (have to be not null!);  
+
+## General procedures  
+__TableHandler_isValidDataType(const test_data_type)__  
+> Returns true if test_data_type is invalid data type for table handler.  
+
+__TableHandler_isInvalidDelimiter(const delimiter)__  
+> Returns true if delimiter character is invalid.  
+
+TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info], const table_info_size)  
+> Returns number of problems with structure of table. Better use for debugging!  
+
+## File-related procedures  
+__TableHandler_loadStructFile(filepath[], delimiter, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size);__  
+> Reads structured table from file into dest_array.  
+> Returns negative value if any serious problem found, otherwise number of loaded rows.  
+> * filepath[] - Destination of file to load.  
+> * delimiter - Character used for split columns.  
+> * dest_array\[][] - Destination array.  
+> * dest_size - Number of rows in destination array.  
+> * table_info\[][e_table_model_struct_info] - Structure of table.  
+> * table_info_size - Number of columns in table structure.  
+
+__TableHandler_loadLargeStruct(filepath[], delimiter, dest_array[][], dest_size, table_info\[][e_table_model_struct_info], table_info_size, bool:use_utf);__  
+> Reads structured table from file into dest_array.   
+> There is no limitation in string size or number of columns at cost of low performance.  
+> Returns negative value if any serious problem found, otherwise number of loaded rows.  
+> * filepath[] - Destination of file to load.  
+> * delimiter - Character used for split columns.  
+> * dest_array\[][] - Destination array.  
+> * dest_size - Number of rows in destination array.  
+> * table_info\[][e_table_model_struct_info] - Structure of table.  
+> * table_info_size - Number of columns in table structure.  
+> * bool:use_utf  
+
+__TableHandler_saveStructFile(filepath[], delimiter, src_array[][], src_size,table_info[][e_table_model_struct_info], table_info_size);__  
+> Saves structured table into file from dest_array.  
+> Returns negative value if any serious problem found, otherwise number of written rows.  
+> * filepath[] - Destination of file to save.
+> * delimiter - Character used for split columns.
+> * src_array\[][] - Source array.
+> * src_size - Number of rows in source array.
+> * table_info\[][e_table_model_struct_info] - Structure of table.
+> * table_info_size						// Number of columns in table structure.
+
+### Example
+```Pawn
+#include <PawnTableHandler\PawnTableHandler_Main.inc>
+#include <PawnTableHandler\PawnTableHandler_Files.inc>
+#include <PawnTableHandler\PawnTableHandler_DataBase.inc>
+
+enum e_array_struct {
+	E_MODELID,
+	E_INTEGER,
+	Float:E_FLOAT,
+	E_STRING[16]
+};
 static const TestTableStruct[][e_table_model_struct_info] = {
-	{'@',	0,	0,	12,	"id"},
-	{'d',	1,	0,	12,	"value"},
-	{'f',	2,	4,	12,	"speed"},
-	{'s',	3,	0,	16,	"name"}
+	{'@',	0,	0,	1,	"id"},
+	{'d',	E_INTEGER,	0,	1,	"value"},
+	{'f',	E_FLOAT,	4,	1,	"speed"},
+	{'s',	E_STRING,	0,	16,	"name"}
 };
-*/
-enum e_table_model_struct_info {
-	E_TABLEDATA_TYPE,				// defines row id, decimal integer, float, hex, string, ...;
-	E_TABLEDATA_OFFSET,				// defines offset in array;
-	E_TABLEDATA_PRECISION,			// defines number of digits after dot at writing float;
-	E_TABLEDATA_SIZE,				// defines width for integers and cells for strings;
-	E_TABLEDATA_DB_FIELD_NAME[TABLEHANDLER_MAX_DBFIELD_NAME]	// defines name to access db field(column);
-};
-static const valid_data_types[] = {	// These values have to be sorted.
-	'@',	// Integer, that points at row in destination array, have to be only in first column;
-	'd',	// Integer (decimal);
-	'f',	// Float;
-	'h',	// Integer (hex);
-	's'		// String (have to be not null!);
-};
-//	Returns true if test_data_type is invalid data type for table handler.
-stock TableHandler_isValidDataType(const test_data_type) {
-	if( test_data_type < valid_data_types[0] || test_data_type > valid_data_types[sizeof(valid_data_types) - 1] ) {
-		return false;
+new Array[2][e_array_struct];
+
+main() {
+	TableHandler_loadStructFile("test/table_handler/source_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct));
+	TableHandler_loadLargeStruct("test/table_handler/source_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct), false);
+	for(new array_index = 0; array_index < sizeof(Array); ++array_index) {
+		printf(
+			"Array content@%d: (%d)(%d)(%f)(%s)",
+			array_index,
+			Array[array_index][E_MODELID],
+			Array[array_index][E_INTEGER],
+			Array[array_index][E_FLOAT],
+			Array[array_index][E_STRING]
+		);
 	}
-	for(new data_type = 0; data_type < sizeof(valid_data_types); ++data_type) {
-		if( test_data_type == valid_data_types[data_type] ) {
-			return true;
-		}
-	}
-	return false;
+	TableHandler_saveStructFile("test/table_handler/dest_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct));
 }
-//	Returns true if delimiter character is invalid.
-stock TableHandler_isInvalidDelimiter(const delimiter) {
-	if( !delimiter ) {
-		return true;
-	} else if( (delimiter > '0' - 1) && (delimiter < '9' + 1) ) {
-		return true;
-	}
-	return false;
-}
-//	Returns number of problems with structure of table. Better use for debugging!
-stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info], const table_info_size) {
-	new
-		table_column,
-		alter_column,
-		error_counter = 0,
-		data_type,
-		data_offset,
-		data_precision,
-		data_size,
-		alter_offset,
-		data_to_a, data_cells_a,
-		data_to_b, data_cells_b
-	;
-	if( table_info_size < 1 ) {
-		printf("[TableStruct_isInvalid] invalid number of columns in table structure(%d < 1)!", table_info_size);
-		error_counter++;
-	}
-	for(table_column = 0; table_column < table_info_size; ++table_column) {
-		data_type =			table_info[table_column][E_TABLEDATA_TYPE];
-		data_offset =		table_info[table_column][E_TABLEDATA_OFFSET];
-		data_precision =	table_info[table_column][E_TABLEDATA_PRECISION];
-		data_size =			table_info[table_column][E_TABLEDATA_SIZE];
-		if( !TableHandler_isValidDataType(data_type) ) {
-			printf("[TableStruct_isInvalid] invalid data type(%c) for column %d(%s)!", data_type, table_column, table_info[table_column][E_TABLEDATA_DB_FIELD_NAME]);
-			error_counter++;
-		}
-		if( data_type == '@' && table_column > 0 ) {
-			printf("[TableStruct_isInvalid] @column have to be first, found at column=%d(%s)!", table_column, table_info[table_column][E_TABLEDATA_DB_FIELD_NAME]);
-			error_counter++;
-		}
-		if( data_offset < 0 ) {
-			printf("[TableStruct_isInvalid] invalid offset(%d) for column %d(%s)!", data_offset, table_column, table_info[table_column][E_TABLEDATA_DB_FIELD_NAME]);
-			error_counter++;
-		}
-		if( data_precision < 0 ) {
-			printf("[TableStruct_isInvalid] invalid precision(%d) for column %d(%s)!", data_precision, table_column, table_info[table_column][E_TABLEDATA_DB_FIELD_NAME]);
-			error_counter++;
-		}
-		if( data_size < 0 ) {
-			printf("[TableStruct_isInvalid] invalid precision(%d) for column %d(%s)!", data_size, table_column, table_info[table_column][E_TABLEDATA_DB_FIELD_NAME]);
-			error_counter++;
-		}
-		if( !table_info[table_column][E_TABLEDATA_DB_FIELD_NAME][0] ) {
-			printf("[TableStruct_isInvalid] column %d must be non zero name!", table_column);
-			error_counter++;
-		} else if( table_info[table_column][E_TABLEDATA_DB_FIELD_NAME][TABLEHANDLER_MAX_DBFIELD_NAME - 1] ) {
-			printf("[TableStruct_isInvalid] DB field name must be null terminated in column %d!", table_column);
-			error_counter++;
-		}
-		data_cells_a = 1;
-		data_to_a = data_offset;
-		if( data_type == 's' ) {
-			data_cells_a = data_size;
-			data_to_a += data_cells_a - 1;
-		}
-		for(alter_column = table_column + 1; alter_column < table_info_size; ++alter_column) {
-			data_to_b = alter_offset = table_info[alter_column][E_TABLEDATA_OFFSET];
-			data_cells_b = 1;
-			if( table_info[alter_column][E_TABLEDATA_TYPE] == 's' ) {
-				data_cells_b = table_info[alter_column][E_TABLEDATA_SIZE];
-				data_to_b += data_cells_b - 1;
-			}
-			if( !strcmp(table_info[table_column][E_TABLEDATA_DB_FIELD_NAME], table_info[alter_column][E_TABLEDATA_DB_FIELD_NAME], true) ) {
-				printf("[TableStruct_isInvalid] found repeated field name in different columns(%d & %d)!", table_column, alter_column);
-				error_counter++;
-			}
-			new
-				pos_min = ((alter_offset < data_offset) ? alter_offset : data_offset),
-				pos_max = ((data_to_b > data_to_a) ? data_to_b : data_to_a)
-			;
-			if( (pos_max - pos_min + 1) < (data_cells_a + data_cells_b) ) {
-				printf("[TableStruct_isInvalid] columns %d & %d are intersecting!", table_column, alter_column);
-				error_counter++;
-			}
-		}
-	}
-	return error_counter;
-}
+```
