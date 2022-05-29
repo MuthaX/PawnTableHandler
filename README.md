@@ -102,3 +102,44 @@ main() {
 	TableHandler_saveStructFile("test/table_handler/dest_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct));
 }
 ```
+##  DataBase-related procedures
+enum e_tablehandle_db_struct_mode {
+	E_TABLEDATA_RES_AUTODETECT,
+	E_TABLEDATA_RES_DIFFERENT,
+	E_TABLEDATA_RES_ISSAME
+};
+
+__TableHandler_DB_IsSameStructRes(db_handle, table_info[][e_table_model_struct_info], table_info_size)__
+> Returns true if the defined table structure and currently active query result is same.  
+> * db_handle - (used only with MySQL-plugin up to R39)
+> * table_info\[][e_table_model_struct_info] - Structure of table.
+> * table_info_size - Number of columns in table structure.
+
+__TableHandler_DB_parseDirect(db_handle, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size)__
+> Parsing query results with direct use of table structure.  
+> Returns negative value if any serious problem found, otherwise number of loaded rows.  
+> * db_handle - (used only with MySQL-plugin up to R39)
+> * dest_array\[][] - Destination array.
+> * dest_size - Number of rows in destination array.
+> * table_info\[][e_table_model_struct_info] - Structure of table.
+> * table_info_size - Number of columns in table structure.
+
+__TableHandler_DB_parseContent(db_handle, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size)__
+> Parsing SQL query results with use field names as indexes.  
+> Returns negative value if any serious problem found, otherwise number of loaded rows.  
+> * db_handle - (used only with MySQL-plugin up to R39)
+> * dest_array\[][] - Destination array.
+> * dest_size - Number of rows in destination array.
+> * table_info\[][e_table_model_struct_info] - Structure of table.
+> * table_info_size - Number of columns in table structure.
+
+__TableHandler_DB_parseStrategy(db_handle, &e_tablehandle_db_struct_mode:parsing_stategy, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size)__
+> Parsing query results with selection parsing strategy (and saving auto-determined result).  
+> Returns negative value if any serious problem found, otherwise number of loaded rows.  
+> * db_handle - (used only with MySQL-plugin up to R39)
+> * parsing_stategy - defines parsing strategy and saves it when changed
+> * dest_array\[][] - Destination array.
+> * dest_size - Number of rows in destination array.
+> * table_info\[][e_table_model_struct_info] - Structure of table.
+> * table_info_size - Number of columns in table structure.
+
