@@ -15,6 +15,11 @@ Procedures for loading and saving tables from/into different sources using only 
 **E_TABLEDATA_SIZE** - defines width for integers and cells for strings;  
 **E_TABLEDATA_DB_FIELD_NAME** - defines name to access db field(column);  
 
+## Query results Parsing strategy
+**E_TABLEDATA_RES_AUTODETECT** - makes table handler to select parsing stategy by itself.  
+**E_TABLEDATA_RES_DIFFERENT** - makes table handler to parse via field names.  
+**E_TABLEDATA_RES_ISSAME** - makes table handler to parse via field index.  
+
 ## Allowed data types
 Put as character where it used.  
 > * @ - Integer, that points at row in destination array, **have to be only in first column**;
