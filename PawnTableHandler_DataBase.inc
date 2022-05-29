@@ -179,8 +179,9 @@ stock TableHandler_DB_parseStrategy(
 			parsing_stategy = E_TABLEDATA_RES_DIFFERENT;
 		}
 	}
+	new result;
 	if( parsing_stategy == E_TABLEDATA_RES_ISSAME ) {
-		TableHandler_DB_parseDirect(
+		result = TableHandler_DB_parseDirect(
 			db_handle,
 			dest_array,
 			dest_size,
@@ -188,7 +189,7 @@ stock TableHandler_DB_parseStrategy(
 			table_info_size
 		);
 	} else {
-		TableHandler_DB_parseContent(
+		result = TableHandler_DB_parseContent(
 			db_handle,
 			dest_array,
 			dest_size,
@@ -196,4 +197,5 @@ stock TableHandler_DB_parseStrategy(
 			table_info_size
 		);
 	}
+	return result;
 }
