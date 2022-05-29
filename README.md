@@ -2,21 +2,21 @@
 Procedures for loading and saving tables from/into different sources using only structure description.
 
 ## Defines
-**\_\_TABLEHANDLER_INCLUDED\_\_** - used for determinate use of PawnTableHandler.
-**TABLEHANDLER_MAX_STRING_SIZE** - maximum size of buffered string when reading file through fread. Default size 2048 cells. Can be defined with custom value.
-**TABLEHANDLER_MAX_COLUMNS** - maximum number of columns in procedures that are using fread. Default number of columns is 64. Can be defined with custom value.
-**TABLEHANDLER_MAX_DBFIELD_NAME** - maximum size of db-field name in table structure. Default size is 32 cells. Can be defined with custom value.
-**TABLEHANDLER_STRUCTTEST_DISABLE** - define it by yourself to disable checking table structure before handling table. May be useful at production state (undefine while debugging).
+**\_\_TABLEHANDLER_INCLUDED\_\_** - used for determinate use of PawnTableHandler.  
+**TABLEHANDLER_MAX_STRING_SIZE** - maximum size of buffered string when reading file through fread. Default size 2048 cells. Can be defined with custom value.  
+**TABLEHANDLER_MAX_COLUMNS** - maximum number of columns in procedures that are using fread. Default number of columns is 64. Can be defined with custom value.  
+**TABLEHANDLER_MAX_DBFIELD_NAME** - maximum size of db-field name in table structure. Default size is 32 cells. Can be defined with custom value.  
+**TABLEHANDLER_STRUCTTEST_DISABLE** - define it by yourself to disable checking table structure before handling table. May be useful at production state (undefine while debugging).  
 
 ## Table structure model
-**E_TABLEDATA_TYPE** - (character) defines row id, decimal integer, float, hex, string, ...;
-**E_TABLEDATA_OFFSET** - defines offset in array;
-**E_TABLEDATA_PRECISION** - defines number of digits after dot at writing float;
-**E_TABLEDATA_SIZE** - defines width for integers and cells for strings;
-**E_TABLEDATA_DB_FIELD_NAME** - defines name to access db field(column);
+**E_TABLEDATA_TYPE** - (character) defines row id, decimal integer, float, hex, string, ...;  
+**E_TABLEDATA_OFFSET** - defines offset in array;  
+**E_TABLEDATA_PRECISION** - defines number of digits after dot at writing float;  
+**E_TABLEDATA_SIZE** - defines width for integers and cells for strings;  
+**E_TABLEDATA_DB_FIELD_NAME** - defines name to access db field(column);  
 
 ## Allowed data types
-Put as character where it used.
+Put as character where it used.  
 > * @ - Integer, that points at row in destination array, **have to be only in first column**;
 > * d - Integer (decimal);
 > * f - Float;
@@ -35,8 +35,8 @@ TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info], cons
 
 ## File-related procedures
 __TableHandler_loadStructFile(filepath[], delimiter, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size);__
-> Reads structured table from file into dest_array.
-> Returns negative value if any serious problem found, otherwise number of loaded rows.
+> Reads structured table from file into dest_array.  
+> Returns negative value if any serious problem found, otherwise number of loaded rows.  
 > * filepath[] - Destination of file to load.
 > * delimiter - Character used for split columns.
 > * dest_array\[][] - Destination array.
@@ -45,9 +45,9 @@ __TableHandler_loadStructFile(filepath[], delimiter, dest_array[][], dest_size, 
 > * table_info_size - Number of columns in table structure.
 
 __TableHandler_loadLargeStruct(filepath[], delimiter, dest_array[][], dest_size, table_info\[][e_table_model_struct_info], table_info_size, bool:use_utf);__
-> Reads structured table from file into dest_array.
-> There is no limitation in string size or number of columns at cost of low performance.
-> Returns negative value if any serious problem found, otherwise number of loaded rows.
+> Reads structured table from file into dest_array.  
+> There is no limitation in string size or number of columns at cost of low performance.  
+> Returns negative value if any serious problem found, otherwise number of loaded rows.  
 > * filepath[] - Destination of file to load.
 > * delimiter - Character used for split columns.
 > * dest_array\[][] - Destination array.
@@ -57,8 +57,8 @@ __TableHandler_loadLargeStruct(filepath[], delimiter, dest_array[][], dest_size,
 > * bool:use_utf
 
 __TableHandler_saveStructFile(filepath[], delimiter, src_array[][], src_size,table_info[][e_table_model_struct_info], table_info_size);__
-> Saves structured table into file from dest_array.
-> Returns negative value if any serious problem found, otherwise number of written rows.
+> Saves structured table into file from dest_array.  
+> Returns negative value if any serious problem found, otherwise number of written rows.  
 > * filepath[] - Destination of file to save.
 > * delimiter - Character used for split columns.
 > * src_array\[][] - Source array.
