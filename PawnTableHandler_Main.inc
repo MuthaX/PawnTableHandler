@@ -164,13 +164,15 @@ stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info]
 				printf("[TableStruct_isInvalid] found repeated field name in different columns(%d & %d)!", table_column, alter_column);
 				error_counter++;
 			}
-			new
-				pos_min = ((alter_offset < data_offset) ? alter_offset : data_offset),
-				pos_max = ((data_to_b > data_to_a) ? data_to_b : data_to_a)
-			;
-			if( (pos_max - pos_min + 1) < (data_cells_a + data_cells_b) ) {
-				printf("[TableStruct_isInvalid] columns %d & %d are intersecting!", table_column, alter_column);
-				error_counter++;
+			if( data_type != '@' && table_info[alter_column][E_TABLEDATA_TYPE] != '@' ) {
+				new
+					pos_min = ((alter_offset < data_offset) ? alter_offset : data_offset),
+					pos_max = ((data_to_b > data_to_a) ? data_to_b : data_to_a)
+				;
+				if( (pos_max - pos_min + 1) < (data_cells_a + data_cells_b) ) {
+					printf("[TableStruct_isInvalid] columns %d & %d are intersecting!", table_column, alter_column);
+					error_counter++;
+				}
 			}
 		}
 	}
