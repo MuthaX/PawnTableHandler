@@ -52,11 +52,15 @@ stock TableHandler_loadStructFile(
 			//	Possible to trim with some std procedure.
 			for(buffer_index = buffer_len - 1; buffer_index > 0; buffer_index--) {
 				buffer_char = buffer_string[buffer_index];
-				if( !(buffer_char == '\n' || buffer_char == '\r') ) {
-					buffer_len = buffer_index + 1;
-					buffer_string[buffer_len] = EOS;
+				if( buffer_char == '\n' || buffer_char == '\r' ) {
+					buffer_len = buffer_index;
+					buffer_string[buffer_index] = EOS;
+				} else {
 					break;
 				}
+			}
+			if( buffer_len < 1 ) {
+				continue;
 			}
 			//	Step 1: indexing column borders.
 			was_content = false;
