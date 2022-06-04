@@ -41,6 +41,7 @@ stock TableHandler_loadStructFile(
 			data_type,
 			data_offset,
 			data_size,
+			is_packed,
 			put_in_row = -1,
 			value_int, Float:value_float, column_starts_at
 		;
@@ -78,6 +79,7 @@ stock TableHandler_loadStructFile(
 				data_type =			table_info[column_index][E_TABLEDATA_TYPE];
 				data_offset =		table_info[column_index][E_TABLEDATA_OFFSET];
 				data_size =			table_info[column_index][E_TABLEDATA_SIZE];
+				is_packed =			table_info[column_index][E_TABLEDATA_OPTIONS] & 2;
 				column_starts_at =	column_borders_at[column_index][0];
 				if( data_type == '@' || data_type == 'd' ) {
 					value_int = strval(buffer_string[column_starts_at]);
@@ -108,7 +110,12 @@ stock TableHandler_loadStructFile(
 				} else if( data_type == '@' ) {
 					continue;
 				} else {
-					strmid(dest_array[put_in_row][data_offset], buffer_string, column_starts_at, column_borders_at[column_index][1], data_size);
+					if( is_packed ) {
+						buffer_string[column_borders_at[column_index][1]] = EOS;
+						strpack(dest_array[put_in_row][data_offset], buffer_string[column_starts_at], data_size);
+					} else {
+						strmid(dest_array[put_in_row][data_offset], buffer_string, column_starts_at, column_borders_at[column_index][1], data_size);
+					}
 				}
 			}
 			count_items++;
@@ -155,6 +162,7 @@ stock TableHandler_loadLargeStruct(
 			data_type,
 			data_offset,
 			data_size,
+			is_packed,
 			put_in_row = -1,
 			value_int, Float:value_float,
 			substring[32], substring_index
@@ -187,7 +195,11 @@ stock TableHandler_loadLargeStruct(
 							} else if( data_type == 'f' ) {
 								dest_array[put_in_row][data_offset] = _:value_float;
 							} else if( data_type == 's' ) {
-								dest_array[put_in_row][data_offset + substring_index] = EOS;
+								if( is_packed ) {
+									dest_array[put_in_row][data_offset + (substring_index >> 2)] |= 0 << (substring_index & 3);
+								} else {
+									dest_array[put_in_row][data_offset + substring_index] = EOS;
+								}
 							}
 						} else {
 							printf("[TableLoader_fromFileLargeStruct] found invalid number in columns(n=%d ts=%d) @ line=%d!", column_index, table_info_size, line_index);
@@ -214,6 +226,7 @@ stock TableHandler_loadLargeStruct(
 					substring_index = 0;
 					data_type =			table_info[column_index][E_TABLEDATA_TYPE];
 					data_offset =		table_info[column_index][E_TABLEDATA_OFFSET];
+					is_packed =			table_info[column_index][E_TABLEDATA_OPTIONS] & 2;
 					if( data_type == 's' ) {
 						data_size =		table_info[column_index][E_TABLEDATA_SIZE];
 					} else {
@@ -226,7 +239,11 @@ stock TableHandler_loadLargeStruct(
 				}
 				if( put_in_row >= 0 && put_in_row < dest_size ) {
 					if( data_type == 's' ) {
-						dest_array[put_in_row][data_offset + substring_index] = buffer_char;
+						if( is_packed ) {
+							dest_array[put_in_row][data_offset + (substring_index >> 2)] |= buffer_char << (substring_index & 3);
+						} else {
+							dest_array[put_in_row][data_offset + substring_index] = buffer_char;
+						}
 					} else {
 						substring[substring_index] = buffer_char;
 					}
@@ -248,7 +265,8 @@ stock TableHandler_saveStructFile(
 	src_array[][],								// Source array.
 	const src_size,								// Number of rows in source array.
 	const table_info[][e_table_model_struct_info],	// Structure of table.
-	const table_info_size						// Number of columns in table structure.
+	const table_info_size,						// Number of columns in table structure.
+	bool:use_utf
 ) {
 	new
 		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size),
@@ -271,7 +289,9 @@ stock TableHandler_saveStructFile(
 			data_offset,
 			data_precision,
 			data_size,
+			is_packed,
 			item_index,
+			symbol,
 			substring[32]
 		;
 		count_items = 0;
@@ -281,6 +301,7 @@ stock TableHandler_saveStructFile(
 				data_offset =		table_info[column_index][E_TABLEDATA_OFFSET];
 				data_precision =	table_info[column_index][E_TABLEDATA_PRECISION];
 				data_size =			table_info[column_index][E_TABLEDATA_SIZE];
+				is_packed =			table_info[column_index][E_TABLEDATA_OPTIONS] & 2;
 				if( data_type == '@' ) {
 					format(substring, sizeof(substring), "%0*d", data_size, item_index);
 					fwrite(f_handle, substring);
@@ -299,7 +320,25 @@ stock TableHandler_saveStructFile(
 						src_array[item_index][data_offset] = '?';
 						src_array[item_index][data_offset + 1] = EOS;
 					}
-					fwrite(f_handle, src_array[item_index][data_offset]);
+					if( is_packed ) {
+						for(new substring_index = 0; substring_index < data_size; ++substring_index) {
+							symbol = src_array[item_index][data_offset + substring_index / 4] >> (8 * (substring_index & 3));
+							fputchar(f_handle, symbol & 0xFF, use_utf);
+						}
+					} else {
+						if( use_utf ) {
+							fwrite(f_handle, src_array[item_index][data_offset]);
+						} else {
+							for(new substring_index = 0; substring_index < data_size; ++substring_index) {
+								symbol = src_array[item_index][data_offset + substring_index];
+								if( symbol ) {
+									fputchar(f_handle, symbol, false);
+								} else {
+									break;
+								}
+							}	
+						}
+					}
 				}
 				if( column_index + 1 < table_info_size ) {
 					substring[0] = delimiter;
