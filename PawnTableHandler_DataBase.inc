@@ -53,11 +53,12 @@ stock TableHandler_DB_parseDirect(
 	dest_array[][],
 	const dest_size,
 	const table_info[][e_table_model_struct_info],
-	const table_info_size
+	const table_info_size,
+	const table_name[]
 ) {
 	new
 		#if(!defined TABLEHANDLER_STRUCTTEST_DISABLE)
-		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size),
+		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size, table_name),
 		#endif
 		is_indexed = (table_info[0][E_TABLEDATA_TYPE] == '@'),
 		row_index,
@@ -71,7 +72,7 @@ stock TableHandler_DB_parseDirect(
 	;
 	#if !defined TABLEHANDLER_STRUCTTEST_DISABLE
 	if( error_counter ) {
-		printf("[TableHandler_DB_parseDirect] cant save table due to the problems in table structure (found %d errors)!", error_counter);
+		printf("[TableHandler_DB_parseDirect(%s)] cant save table due to the problems in table structure (found %d errors)!", table_name, error_counter);
 		return count_items;
 	}
 	#endif
@@ -119,7 +120,7 @@ stock TableHandler_DB_parseDirect(
 			}
 			count_items++;
 		} else {
-			printf("[TableHandler_DB_parseDirect] invalid index found(%d) @ line=%d!", array_row, row_index);
+			printf("[TableHandler_DB_parseDirect(%s)] invalid index found(%d) @ line=%d!", table_name, array_row, row_index);
 			if( !is_indexed ) {
 				break;
 			}
@@ -136,11 +137,12 @@ stock TableHandler_DB_parseContent(
 	dest_array[][],
 	const dest_size,
 	const table_info[][e_table_model_struct_info],
-	const table_info_size
+	const table_info_size,
+	const table_name[]
 ) {
 	new
 		#if(!defined TABLEHANDLER_STRUCTTEST_DISABLE)
-		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size),
+		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size, table_name),
 		#endif
 		is_indexed = (table_info[0][E_TABLEDATA_TYPE] == '@'),
 		rows_number,
@@ -159,7 +161,7 @@ stock TableHandler_DB_parseContent(
 	#endif
 	#if(!defined TABLEHANDLER_STRUCTTEST_DISABLE)
 	if( error_counter ) {
-		printf("[TableHandler_DB_parseContent] cant load table from query result due to the problems in table structure (found %d errors)!", error_counter);
+		printf("[TableHandler_DB_parseContent(%s)] cant load table from query result due to the problems in table structure (found %d errors)!", table_name, error_counter);
 		return count_items;
 	}
 	#endif
@@ -202,7 +204,7 @@ stock TableHandler_DB_parseContent(
 			}
 			count_items++;
 		} else {
-			printf("[TableHandler_DB_parseContent] invalid index found(%d) @ line=%d!", array_row, row_index);
+			printf("[TableHandler_DB_parseContent (%s)] invalid index found(%d) @ line=%d!", table_name, array_row, row_index);
 			if( !is_indexed ) {
 				break;
 			}
@@ -220,7 +222,8 @@ stock TableHandler_DB_parseStrategy(
 	dest_array[][],
 	const dest_size,
 	const table_info[][e_table_model_struct_info],
-	const table_info_size
+	const table_info_size,
+	const table_name[]
 ) {
 	if( parsing_stategy == E_TABLEDATA_RES_AUTODETECT ) {
 		new compare_result;
@@ -238,15 +241,15 @@ stock TableHandler_DB_parseStrategy(
 	new result;
 	if( parsing_stategy == E_TABLEDATA_RES_ISSAME ) {
 		#if defined cache_get_field_type	// <=R39
-		result = TableHandler_DB_parseDirect(dest_array, dest_size, table_info, table_info_size);
+		result = TableHandler_DB_parseDirect(table_name, dest_array, dest_size, table_info, table_info_size);
 		#else
-		result = TableHandler_DB_parseDirect(db_handle, dest_array, dest_size, table_info, table_info_size);
+		result = TableHandler_DB_parseDirect(table_name, db_handle, dest_array, dest_size, table_info, table_info_size);
 		#endif
 	} else {
 		#if defined cache_get_field_type	// <=R39
-		result = TableHandler_DB_parseContent(dest_array, dest_size, table_info, table_info_size);
+		result = TableHandler_DB_parseContent(table_name, dest_array, dest_size, table_info, table_info_size);
 		#else
-		result = TableHandler_DB_parseContent(db_handle, dest_array, dest_size, table_info, table_info_size);
+		result = TableHandler_DB_parseContent(table_name, db_handle, dest_array, dest_size, table_info, table_info_size);
 		#endif
 	}
 	return result;

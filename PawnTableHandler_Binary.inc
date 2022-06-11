@@ -9,7 +9,8 @@ stock TableHandler_Bin_read(
 	dest_array[][],
 	const rows_to_read,
 	const table_info[][e_table_model_struct_info],	// Structure of table.
-	const table_info_size							// Number of columns in table structure.
+	const table_info_size,							// Number of columns in table structure.
+	const table_name[]
 ) {
 	new
 		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size),
@@ -23,7 +24,7 @@ stock TableHandler_Bin_read(
 	;
 	#if !defined TABLEHANDLER_STRUCTTEST_DISABLE
 	if( error_counter ) {
-		printf("[TableHandler_Bin_read] cant load table from[%s] due to the problems in table structure (found %d errors)!", error_counter);
+		printf("[TableHandler_Bin_read(%s)] cant load table from[%s] due to the problems in table structure (found %d errors)!", table_name, error_counter);
 		return -1;
 	}
 	#endif
@@ -83,7 +84,8 @@ stock TableHandler_Bin_write(
 	const source_array[][],
 	const rows_number,
 	const table_info[][e_table_model_struct_info],	// Structure of table.
-	const table_info_size							// Number of columns in table structure.
+	const table_info_size,							// Number of columns in table structure.
+	const table_name[]
 ) {
 	new
 		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size),
@@ -95,7 +97,7 @@ stock TableHandler_Bin_write(
 	;
 	#if !defined TABLEHANDLER_STRUCTTEST_DISABLE
 	if( error_counter ) {
-		printf("[TableHandler_Bin_write] cant load table from[%s] due to the problems in table structure (found %d errors)!", error_counter);
+		printf("[TableHandler_Bin_write(%s)] cant load table from[%s] due to the problems in table structure (found %d errors)!", table_name, error_counter);
 		return -1;
 	}
 	for(row_index = 0; row_index < rows_number; ++row_index) {

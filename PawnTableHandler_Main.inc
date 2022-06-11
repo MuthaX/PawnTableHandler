@@ -70,7 +70,7 @@ stock TableHandler_isInvalidDelimiter(const delimiter) {
 	return false;
 }
 //	Returns number of problems with structure of table. Better use for debugging!
-stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info], const table_info_size) {
+stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info], const table_info_size, const table_name[]) {
 	new
 		table_column,
 		alter_column,
@@ -87,7 +87,7 @@ stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info]
 		column_name[TABLEHANDLER_MAX_DBFIELD_NAME]
 	;
 	if( table_info_size < 1 ) {
-		printf("[TableStruct_isInvalid] invalid number of columns in table structure(%d < 1)!", table_info_size);
+		printf("[TableStruct_isInvalid(%s)] invalid number of columns in table structure(%d < 1)!", table_name, table_info_size);
 		error_counter++;
 	}
 	for(table_column = 0; table_column < table_info_size; ++table_column) {
@@ -99,51 +99,51 @@ stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info]
 		data_options =		table_info[table_column][E_TABLEDATA_OPTIONS];
 		strmid(column_name, table_info[table_column][E_TABLEDATA_DB_FIELD_NAME], 0, TABLEHANDLER_MAX_DBFIELD_NAME, sizeof(column_name));
 		if( !TableHandler_isValidDataType(data_type) ) {
-			printf("[TableStruct_isInvalid] invalid data type(%c) for column %d(%s)!", data_type, table_column, column_name);
+			printf("[TableStruct_isInvalid(%s)] invalid data type(%c) for column %d(%s)!", table_name, data_type, table_column, column_name);
 			error_counter++;
 		}
 		if( data_type == '@' && table_column > 0 ) {
-			printf("[TableStruct_isInvalid] @column have to be first, found at column=%d(%s)!", table_column, column_name);
+			printf("[TableStruct_isInvalid(%s)] @column have to be first, found at column=%d(%s)!", table_name, table_column, column_name);
 			error_counter++;
 		}
 		if( data_offset < 0 ) {
-			printf("[TableStruct_isInvalid] invalid offset(%d) for column %d(%s)!", data_offset, table_column, column_name);
+			printf("[TableStruct_isInvalid(%s)] invalid offset(%d) for column %d(%s)!", table_name, data_offset, table_column, column_name);
 			error_counter++;
 		}
 		if( data_precision < 0 ) {
-			printf("[TableStruct_isInvalid] invalid precision(%d) for column %d(%s)!", data_precision, table_column, column_name);
+			printf("[TableStruct_isInvalid(%s)] invalid precision(%d) for column %d(%s)!", table_name, data_precision, table_column, column_name);
 			error_counter++;
 		}
 		if( data_size < 0 ) {
-			printf("[TableStruct_isInvalid] invalid precision(%d) for column %d(%s)!", data_size, table_column, column_name);
+			printf("[TableStruct_isInvalid(%s)] invalid precision(%d) for column %d(%s)!", table_name, data_size, table_column, column_name);
 			error_counter++;
 		}
 		if( !column_name[0] ) {
-			printf("[TableStruct_isInvalid] column %d must be non zero name!", table_column);
+			printf("[TableStruct_isInvalid(%s)] column %d must be non zero name!", table_name, table_column);
 			error_counter++;
 		} else if( table_info[table_column][E_TABLEDATA_DB_FIELD_NAME][TABLEHANDLER_MAX_DBFIELD_NAME - 1] ) {
-			printf("[TableStruct_isInvalid] DB field name must be null terminated in column %d!", table_column);
+			printf("[TableStruct_isInvalid(%s)] DB field name must be null terminated in column %d!", table_name, table_column);
 			error_counter++;
 		}
 		if( data_type == 's' ) {
 			if( data_bytes < 2 ) {
-				printf("[TableStruct_isInvalid] column %d(%s) have to have at least 2 bytes size(%s)!", table_column, column_name, data_bytes);
+				printf("[TableStruct_isInvalid(%s)] column %d(%s) have to have at least 2 bytes size(%s)!", table_name, table_column, column_name, data_bytes);
 				error_counter++;
 			}
 			if( e_tablehanlder_option:data_options & E_TABLEHANDLER_OPTION_PACK ) {
 				if( 4 * data_bytes != data_size ) {
-					printf("[TableStruct_isInvalid] column %d(%s) incorrect bytes-size(%d != %d)!", data_bytes, data_size / 4);
+					printf("[TableStruct_isInvalid(%s)] column %d(%s) incorrect bytes-size(%d != %d)!", table_name, data_bytes, data_size / 4);
 					error_counter++;
 				}
 			} else {
 				if( data_bytes != data_size ) {
-					printf("[TableStruct_isInvalid] column %d(%s) incorrect bytes-size(%d != %d)!", data_bytes, data_size);
+					printf("[TableStruct_isInvalid(%s)] column %d(%s) incorrect bytes-size(%d != %d)!", table_name, data_bytes, data_size);
 					error_counter++;
 				}
 			}
 		} else {
 			if( data_bytes < 1 || data_bytes > 4 ) {
-				printf("[TableStruct_isInvalid] column %d(%s) have invalid bytes-size for valiable(%d)!", table_column, column_name, data_bytes);
+				printf("[TableStruct_isInvalid(%s)] column %d(%s) have invalid bytes-size for valiable(%d)!", table_name, table_column, column_name, data_bytes);
 				error_counter++;
 			}
 		}
@@ -161,7 +161,7 @@ stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info]
 				data_to_b += data_cells_b - 1;
 			}
 			if( !strcmp(column_name, table_info[alter_column][E_TABLEDATA_DB_FIELD_NAME], true) ) {
-				printf("[TableStruct_isInvalid] found repeated field name in different columns(%d & %d)!", table_column, alter_column);
+				printf("[TableStruct_isInvalid(%s)] found repeated field name in different columns(%d & %d)!", table_name, table_column, alter_column);
 				error_counter++;
 			}
 			if( data_type != '@' && table_info[alter_column][E_TABLEDATA_TYPE] != '@' ) {
@@ -170,7 +170,7 @@ stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info]
 					pos_max = ((data_to_b > data_to_a) ? data_to_b : data_to_a)
 				;
 				if( (pos_max - pos_min + 1) < (data_cells_a + data_cells_b) ) {
-					printf("[TableStruct_isInvalid] columns %d & %d are intersecting!", table_column, alter_column);
+					printf("[TableStruct_isInvalid(%s)] columns %d & %d are intersecting!", table_name, table_column, alter_column);
 					error_counter++;
 				}
 			}

@@ -10,25 +10,26 @@ stock TableHandler_loadStructFile(
 	dest_array[][],								// Destination array.
 	const dest_size,							// Number of rows in destination array.
 	const table_info[][e_table_model_struct_info],	// Structure of table.
-	const table_info_size						// Number of columns in table structure.
+	const table_info_size,						// Number of columns in table structure.
+	const table_name[]							// Indentification name.
 ) {
 	new
-		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size),
+		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size, table_name),
 		File:f_handle,
 		line_index = 0,
 		count_items = -1	// error by default
 	;
 	#if !defined TABLEHANDLER_STRUCTTEST_DISABLE
 	if( error_counter ) {
-		printf("[TableLoader_fromFileStruct] cant load table from[%s] due to the problems in table structure (found %d errors)!", filepath, error_counter);
+		printf("[TableLoader_fromFileStruct(%s)] cant load table from[%s] due to the problems in table structure (found %d errors)!", table_name, filepath, error_counter);
 		return count_items;
 	}
 	if( table_info_size > TABLEHANDLER_MAX_COLUMNS ) {	// This procedure is using fixed size array for column boundaries in buffered string.
-		printf("[TableLoader_fromFileStruct] cant load table from[%s] because it is too many columns(%d/%d)!", filepath, table_info_size, TABLEHANDLER_MAX_COLUMNS);
+		printf("[TableLoader_fromFileStruct(%s)] cant load table from[%s] because it is too many columns(%d/%d)!", table_name, filepath, table_info_size, TABLEHANDLER_MAX_COLUMNS);
 		return count_items;
 	}
 	if( TableHandler_isInvalidDelimiter(delimiter) ) {
-		printf("[TableLoader_fromFileStruct] cant load table from[%s] because of invalid delimiter!", filepath);
+		printf("[TableLoader_fromFileStruct(%s)] cant load table from[%s] because of invalid delimiter!", table_name, filepath);
 		return count_items;
 	}
 	#endif
@@ -75,7 +76,7 @@ stock TableHandler_loadStructFile(
 			}
 			column_borders_at[column_index][1] = buffer_len;
 			if( ++column_index != table_info_size ) {
-				printf("[TableLoader_fromFileStruct] found invalid number in columns(n=%d ts=%d) @ line=%d!", column_index, table_info_size, line_index);
+				printf("[TableLoader_fromFileStruct(%s)] found invalid number in columns(n=%d ts=%d) @ line=%d!", table_name, column_index, table_info_size, line_index);
 				continue;
 			}
 			//	Step 2: parse columns.
@@ -100,10 +101,10 @@ stock TableHandler_loadStructFile(
 					}
 				}
 				if( put_in_row >= dest_size ) {
-					printf("[TableLoader_fromFileStruct] too many items loaded or too high id found(%d) @ line=%d!", put_in_row, line_index);
+					printf("[TableLoader_fromFileStruct(%s)] too many items loaded or too high id found(%d) @ line=%d!", table_name, put_in_row, line_index);
 					break;
 				} else if( put_in_row < 0 ) {
-					printf("[TableLoader_fromFileStruct] negative id found (%d) @ line=%d!", put_in_row, line_index);
+					printf("[TableLoader_fromFileStruct(%s)] negative id found (%d) @ line=%d!", table_name, put_in_row, line_index);
 					break;
 				}
 
@@ -126,7 +127,7 @@ stock TableHandler_loadStructFile(
 		}
 		fclose(f_handle);
 	} else {
-		printf("[TableLoader_fromFileStruct] cant open file (%s)!", filepath);
+		printf("[TableLoader_fromFileStruct(%s)] cant open file (%s)!", table_name, filepath);
 	}
 	return count_items;
 }
@@ -141,21 +142,22 @@ stock TableHandler_loadLargeStruct(
 	const dest_size,							// Number of rows in destination array.
 	const table_info[][e_table_model_struct_info],	// Structure of table.
 	const table_info_size,						// Number of columns in table structure.
-	const bool:use_utf
+	const bool:use_utf,
+	const table_name[]							// Indentification name.
 ) {
 	new
-		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size),
+		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size, table_name),
 		File:f_handle,
 		line_index = 1,
 		count_items = -1	// error by default
 	;
 	#if !defined TABLEHANDLER_STRUCTTEST_DISABLE
 	if( error_counter ) {
-		printf("[TableLoader_fromFileLargeStruct] cant load table from[%s] due to the problems in table structure (found %d errors)!", filepath, error_counter);
+		printf("[TableLoader_fromFileLargeStruct(%s)] cant load table from[%s] due to the problems in table structure (found %d errors)!", table_name, filepath, error_counter);
 		return count_items;
 	}
 	if( TableHandler_isInvalidDelimiter(delimiter) ) {
-		printf("[TableLoader_fromFileLargeStruct] cant load table from[%s] because of invalid delimiter!", filepath);
+		printf("[TableLoader_fromFileLargeStruct(%s)] cant load table from[%s] because of invalid delimiter!", table_name, filepath);
 		return count_items;
 	}
 	#endif
@@ -206,10 +208,10 @@ stock TableHandler_loadLargeStruct(
 								}
 							}
 						} else {
-							printf("[TableLoader_fromFileLargeStruct] found invalid number in columns(n=%d ts=%d) @ line=%d!", column_index, table_info_size, line_index);
+							printf("[TableLoader_fromFileLargeStruct(%s)] found invalid number in columns(n=%d ts=%d) @ line=%d!", table_name, column_index, table_info_size, line_index);
 						}
 					} else {
-						printf("[TableLoader_fromFileLargeStruct] invalid row id (%d) found @ line=%d!", put_in_row, line_index);
+						printf("[TableLoader_fromFileLargeStruct(%s)] invalid row id (%d) found @ line=%d!", table_name, put_in_row, line_index);
 					}
 					if( buffer_char == delimiter ) {
 						column_index++;
@@ -270,20 +272,21 @@ stock TableHandler_saveStructFile(
 	const src_size,								// Number of rows in source array.
 	const table_info[][e_table_model_struct_info],	// Structure of table.
 	const table_info_size,						// Number of columns in table structure.
-	bool:use_utf
+	bool:use_utf,
+	const table_name[]							// Indentification name.
 ) {
 	new
-		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size),
+		error_counter = TableHandler_isInvalidStruct(table_info, table_info_size, table_name),
 		File:f_handle,
 		count_items = -1
 	;
 	#if !defined TABLEHANDLER_STRUCTTEST_DISABLE
 	if( error_counter ) {
-		printf("[TableSaver_toFileStruct] cant save table due to the problems in table structure (found %d errors)!", error_counter);
+		printf("[TableSaver_toFileStruct(%s)] cant save table due to the problems in table structure (found %d errors)!", table_name, error_counter);
 		return count_items;
 	}
 	if( TableHandler_isInvalidDelimiter(delimiter) ) {
-		printf("[TableLoader_fromFileStruct] cant load table from[%s] because of invalid delimiter!", filepath);
+		printf("[TableLoader_fromFileStruct(%s)] cant load table from[%s] because of invalid delimiter!", table_name, filepath);
 		return count_items;
 	}
 	#endif
@@ -320,7 +323,7 @@ stock TableHandler_saveStructFile(
 					fwrite(f_handle, substring);
 				} else if( data_type == 's' ) {
 					if( !src_array[item_index][data_offset] ) {	// at zero index.
-						printf("[TableSaver_toFileStruct] NULL string found at row=%d column=%d!", item_index, column_index);
+						printf("[TableSaver_toFileStruct(%s)] NULL string found at row=%d column=%d!", table_name, item_index, column_index);
 						src_array[item_index][data_offset] = '?';
 						src_array[item_index][data_offset + 1] = EOS;
 					}
@@ -355,7 +358,7 @@ stock TableHandler_saveStructFile(
 		}
 		fclose(f_handle);
 	} else {
-		printf("[TableSaver_toFileStruct] cant open file (%s)!", filepath);
+		printf("[TableSaver_toFileStruct(%s)] cant open file (%s)!", table_name, filepath);
 	}
 	return count_items;
 }

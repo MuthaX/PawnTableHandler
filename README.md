@@ -35,11 +35,11 @@ __TableHandler_isValidDataType(const test_data_type)__
 __TableHandler_isInvalidDelimiter(const delimiter)__
 > Returns true if delimiter character is invalid.
 
-TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info], const table_info_size)
+__TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info], const table_info_size, table_name[]);__
 > Returns number of problems with structure of table. Better use for debugging!
 
 ## File-related procedures
-__TableHandler_loadStructFile(filepath[], delimiter, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size);__
+__TableHandler_loadStructFile(filepath[], delimiter, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size, table_name[]);__
 > Reads structured table from file into dest_array.  
 > Returns negative value if any serious problem found, otherwise number of loaded rows.  
 > * filepath[] - Destination of file to load.
@@ -48,8 +48,9 @@ __TableHandler_loadStructFile(filepath[], delimiter, dest_array[][], dest_size, 
 > * dest_size - Number of rows in destination array.
 > * table_info\[][e_table_model_struct_info] - Structure of table.
 > * table_info_size - Number of columns in table structure.
+> * table_name - Name of loading resource used for debug purposes.
 
-__TableHandler_loadLargeStruct(filepath[], delimiter, dest_array[][], dest_size, table_info\[][e_table_model_struct_info], table_info_size, bool:use_utf);__
+__TableHandler_loadLargeStruct(filepath[], delimiter, dest_array[][], dest_size, table_info\[][e_table_model_struct_info], table_info_size, bool:use_utf, table_name[]);__
 > Reads structured table from file into dest_array.  
 > There is no limitation in string size or number of columns at cost of low performance.  
 > Returns negative value if any serious problem found, otherwise number of loaded rows.  
@@ -60,8 +61,9 @@ __TableHandler_loadLargeStruct(filepath[], delimiter, dest_array[][], dest_size,
 > * table_info\[][e_table_model_struct_info] - Structure of table.
 > * table_info_size - Number of columns in table structure.
 > * bool:use_utf
+> * table_name - Name of loading resource used for debug purposes.
 
-__TableHandler_saveStructFile(filepath[], delimiter, src_array[][], src_size,table_info[][e_table_model_struct_info], table_info_size);__
+__TableHandler_saveStructFile(filepath[], delimiter, src_array[][], src_size,table_info[][e_table_model_struct_info], table_info_size, table_name[]);__
 > Saves structured table into file from dest_array.  
 > Returns negative value if any serious problem found, otherwise number of written rows.  
 > * filepath[] - Destination of file to save.
@@ -70,6 +72,7 @@ __TableHandler_saveStructFile(filepath[], delimiter, src_array[][], src_size,tab
 > * src_size - Number of rows in source array.
 > * table_info\[][e_table_model_struct_info] - Structure of table.
 > * table_info_size						// Number of columns in table structure.
+> * table_name - Name of loading resource used for debug purposes.
 
 ### Example
 ```Pawn
@@ -92,8 +95,8 @@ static const TestTableStruct[][e_table_model_struct_info] = {
 new Array[2][e_array_struct];
 
 main() {
-	TableHandler_loadStructFile("test/table_handler/source_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct));
-	TableHandler_loadLargeStruct("test/table_handler/source_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct), false);
+	TableHandler_loadStructFile("test/table_handler/source_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct), "source_table");
+	TableHandler_loadLargeStruct("test/table_handler/source_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct), false, "source_table");
 	for(new array_index = 0; array_index < sizeof(Array); ++array_index) {
 		printf(
 			"Array content@%d: (%d)(%d)(%f)(%s)",
@@ -104,7 +107,7 @@ main() {
 			Array[array_index][E_STRING]
 		);
 	}
-	TableHandler_saveStructFile("test/table_handler/dest_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct));
+	TableHandler_saveStructFile("test/table_handler/dest_table.txt", '\t', Array, sizeof(Array), TestTableStruct, sizeof(TestTableStruct), "source_table");
 }
 ```
 ##  DataBase-related procedures
@@ -120,7 +123,7 @@ __TableHandler_DB_IsSameStructRes(db_handle, table_info[][e_table_model_struct_i
 > * table_info\[][e_table_model_struct_info] - Structure of table.
 > * table_info_size - Number of columns in table structure.
 
-__TableHandler_DB_parseDirect(db_handle, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size)__
+__TableHandler_DB_parseDirect(db_handle, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size, table_name[])__
 > Parsing query results with direct use of table structure.  
 > Returns negative value if any serious problem found, otherwise number of loaded rows.  
 > * db_handle - (used only with MySQL-plugin up to R39)
@@ -128,8 +131,9 @@ __TableHandler_DB_parseDirect(db_handle, dest_array[][], dest_size, table_info[]
 > * dest_size - Number of rows in destination array.
 > * table_info\[][e_table_model_struct_info] - Structure of table.
 > * table_info_size - Number of columns in table structure.
+> * table_name - Name of loading resource used for debug purposes.
 
-__TableHandler_DB_parseContent(db_handle, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size)__
+__TableHandler_DB_parseContent(db_handle, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size, table_name[])__
 > Parsing SQL query results with use field names as indexes.  
 > Returns negative value if any serious problem found, otherwise number of loaded rows.  
 > * db_handle - (used only with MySQL-plugin up to R39)
@@ -137,8 +141,9 @@ __TableHandler_DB_parseContent(db_handle, dest_array[][], dest_size, table_info[
 > * dest_size - Number of rows in destination array.
 > * table_info\[][e_table_model_struct_info] - Structure of table.
 > * table_info_size - Number of columns in table structure.
+> * table_name - Name of loading resource used for debug purposes.
 
-__TableHandler_DB_parseStrategy(db_handle, &e_tablehandle_db_struct_mode:parsing_stategy, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size)__
+__TableHandler_DB_parseStrategy(db_handle, &e_tablehandle_db_struct_mode:parsing_stategy, dest_array[][], dest_size, table_info[][e_table_model_struct_info], table_info_size, table_name[])__
 > Parsing query results with selection parsing strategy (and saving auto-determined result).  
 > Returns negative value if any serious problem found, otherwise number of loaded rows.  
 > * db_handle - (used only with MySQL-plugin up to R39)
@@ -147,4 +152,5 @@ __TableHandler_DB_parseStrategy(db_handle, &e_tablehandle_db_struct_mode:parsing
 > * dest_size - Number of rows in destination array.
 > * table_info\[][e_table_model_struct_info] - Structure of table.
 > * table_info_size - Number of columns in table structure.
+> * table_name - Name of loading resource used for debug purposes.
 
