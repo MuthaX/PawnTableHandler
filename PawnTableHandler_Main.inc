@@ -102,8 +102,8 @@ stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info]
 			printf("[TableStruct_isInvalid(%s)] invalid data type(%c) for column %d(%s)!", table_name, data_type, table_column, column_name);
 			error_counter++;
 		}
-		if( data_type == '@' && table_column > 0 ) {
-			printf("[TableStruct_isInvalid(%s)] @column have to be first, found at column=%d(%s)!", table_name, table_column, column_name);
+		if( data_type == '@' && ((table_column != data_offset) || (data_offset > 1)) ) {
+			printf("[TableStruct_isInvalid(%s)] @column have to be one of the first, found at column=%d(%s)!", table_name, table_column, column_name);
 			error_counter++;
 		}
 		if( data_offset < 0 ) {
