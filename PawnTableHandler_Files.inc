@@ -49,6 +49,18 @@ stock TableHandler_loadStructFile(
 		count_items = 0;
 		while( (buffer_len = fread(f_handle, buffer_string, sizeof(buffer_string))) ) {
 			line_index++;
+			//	Step -1: Clear comments.
+			buffer_index = 0;
+			new commentary_pos;
+			while( (commentary_pos = strfind(buffer_string, "#", false, buffer_index)) != -1 ) {
+				// Search for first unescaped commentary symbol.
+				if( !commentary_pos || buffer_string[commentary_pos - 1] != '\\' ) {
+					buffer_string[commentary_pos] = EOS;
+					buffer_len = commentary_pos;
+					break;
+				}
+				buffer_index = commentary_pos + 1;
+			}
 			//	Step 0: Filtering lines.
 			//	Possible to trim with some std procedure.
 			for(buffer_index = buffer_len - 1; buffer_index > 0; buffer_index--) {
@@ -69,6 +81,9 @@ stock TableHandler_loadStructFile(
 			for(buffer_index = 0; buffer_index < buffer_len; ++buffer_index) {
 				buffer_char = buffer_string[buffer_index];
 				if( (buffer_char == delimiter) == was_content ) {
+					if( was_content ) {
+						buffer_string[buffer_index] = EOS;
+					}
 					column_borders_at[column_index][was_content] = buffer_index;
 					column_index += _:was_content;
 					was_content = !was_content;
