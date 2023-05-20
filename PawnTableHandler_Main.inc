@@ -132,18 +132,18 @@ stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info]
 			}
 			if( e_tablehanlder_option:data_options & E_TABLEHANDLER_OPTION_PACK ) {
 				if( 4 * data_bytes != data_size ) {
-					printf("[TableStruct_isInvalid(%s)] column %d(%s) incorrect bytes-size(%d != %d)!", table_name, data_bytes, data_size / 4);
+					printf("[TableStruct_isInvalid(%s)] column %d(%s) incorrect bytes-size(%d != %d)!", table_name, table_column, column_name, data_bytes, (data_size + 3) / 4);
 					error_counter++;
 				}
 			} else {
 				if( data_bytes != data_size ) {
-					printf("[TableStruct_isInvalid(%s)] column %d(%s) incorrect bytes-size(%d != %d)!", table_name, data_bytes, data_size);
+					printf("[TableStruct_isInvalid(%s)] column %d(%s) incorrect bytes-size(%d != %d)!", table_name, table_column, column_name, data_bytes, data_size);
 					error_counter++;
 				}
 			}
 		} else {
 			if( data_bytes < 1 || data_bytes > 4 ) {
-				printf("[TableStruct_isInvalid(%s)] column %d(%s) have invalid bytes-size for valiable(%d)!", table_name, table_column, column_name, data_bytes);
+				printf("[TableStruct_isInvalid(%s)] column %d(%s) have invalid bytes-size for variable(%d)! Valid:1-4.", table_name, table_column, column_name, data_bytes);
 				error_counter++;
 			}
 		}
