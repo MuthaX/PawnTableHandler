@@ -68,12 +68,12 @@ stock TableHandler_DB_parseDirect(
 		data_type,
 		data_offset,
 		data_size,
-		count_items = -1
+		count_items = 0
 	;
 	#if !defined TABLEHANDLER_STRUCTTEST_DISABLE
 	if( error_counter ) {
 		printf("[TableHandler_DB_parseDirect(%s)] cant save table due to the problems in table structure (found %d errors)!", table_name, error_counter);
-		return count_items;
+		return -1;
 	}
 	#endif
 	#if(defined cache_get_field_type)
@@ -152,7 +152,7 @@ stock TableHandler_DB_parseContent(
 		data_type,
 		data_offset,
 		data_size,
-		count_items = -1
+		count_items = 0
 	;
 	#if(defined cache_get_field_type)
 	cache_get_row_count(rows_number);
@@ -162,7 +162,7 @@ stock TableHandler_DB_parseContent(
 	#if(!defined TABLEHANDLER_STRUCTTEST_DISABLE)
 	if( error_counter ) {
 		printf("[TableHandler_DB_parseContent(%s)] cant load table from query result due to the problems in table structure (found %d errors)!", table_name, error_counter);
-		return count_items;
+		return -1;
 	}
 	#endif
 	for(row_index = 0; row_index < rows_number; ++row_index) {
