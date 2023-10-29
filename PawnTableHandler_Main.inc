@@ -131,8 +131,8 @@ stock TableHandler_isInvalidStruct(const table_info[][e_table_model_struct_info]
 				error_counter++;
 			}
 			if( e_tablehanlder_option:data_options & E_TABLEHANDLER_OPTION_PACK ) {
-				if( 4 * data_bytes != data_size ) {
-					printf("[TableStruct_isInvalid(%s)] column %d(%s) incorrect bytes-size(%d != %d)!", table_name, table_column, column_name, data_bytes, (data_size + 3) / 4);
+				if( data_bytes != (4 * data_size) ) {
+					printf("[TableStruct_isInvalid(%s)] column %d(%s) incorrect of bytes(%d) or cells(expected %d) for packed string!", table_name, table_column, column_name, data_bytes, (data_size + 3) / 4);
 					error_counter++;
 				}
 			} else {
