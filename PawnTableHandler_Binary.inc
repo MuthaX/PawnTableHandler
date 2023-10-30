@@ -100,6 +100,7 @@ stock TableHandler_Bin_write(
 		printf("[TableHandler_Bin_write(%s)] cant load table from[%s] due to the problems in table structure (found %d errors)!", table_name, error_counter);
 		return -1;
 	}
+	#endif
 	for(row_index = 0; row_index < rows_number; ++row_index) {
 		for(column_index = 0; column_index < table_info_size; ++column_index) {
 			data_type =		table_info[column_index][E_TABLEDATA_TYPE];
@@ -131,5 +132,4 @@ stock TableHandler_Bin_write(
 			}
 		}
 	}
-	#endif
 }
