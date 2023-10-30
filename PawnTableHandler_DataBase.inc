@@ -4,12 +4,16 @@
 #if(!defined __TABLEHANDLER_INCLUDED__)
 	#error The file PawnTableHandler_Main.inc have to be included before PawnTableHandler_Database.inc!
 #endif
+#if(!defined __TABLEHANDLER_DB_DEFS__)
+	#error The file PawnTableHandler_DB_Definitions.inc have to be included before PawnTableHandler_Database.inc!
+#endif
 //==============================================================================
 enum e_tablehandle_db_struct_mode {
 	E_TABLEDATA_RES_AUTODETECT,
 	E_TABLEDATA_RES_DIFFERENT,
 	E_TABLEDATA_RES_ISSAME
 };
+static string_buffer[4096];
 
 //	Returns true if the defined table structure and currently active query result is same.
 stock TableHandler_DB_IsSameStructRes(
@@ -68,6 +72,7 @@ stock TableHandler_DB_parseDirect(
 		data_type,
 		data_offset,
 		data_size,
+		e_tablehanlder_option:data_options,
 		count_items = 0
 	;
 	#if !defined TABLEHANDLER_STRUCTTEST_DISABLE
@@ -76,19 +81,11 @@ stock TableHandler_DB_parseDirect(
 		return -1;
 	}
 	#endif
-	#if(defined cache_get_field_type)
-	cache_get_row_count(rows_number);
-	#else
-	rows_number = cache_get_row_count(db_handle);
-	#endif
+	PTH_MYSQL_GET_ROWCOUNT(rows_number, db_handle);
 	for(row_index = 0; row_index < rows_number; ++row_index) {
 		column_index = is_indexed;
 		if( is_indexed ) {
-			#if defined cache_get_field_type
-			cache_get_value_index_int(row_index, 0, array_row);
-			#else
-			array_row = cache_get_row_int(row_index, 0, db_handle);
-			#endif
+			PTH_MYSQL_FIELDID_GETINT(row_index, 0, array_row, db_handle);
 		} else {
 			array_row++;
 		}
@@ -96,25 +93,19 @@ stock TableHandler_DB_parseDirect(
 			while( column_index < table_info_size ) {
 				data_type =		table_info[column_index][E_TABLEDATA_TYPE];
 				data_offset =	table_info[column_index][E_TABLEDATA_OFFSET];
+				data_options =	e_tablehanlder_option:table_info[column_index][E_TABLEDATA_OPTIONS];
 				if( data_type == 'd' || data_type == 'h' ) {
-					#if defined cache_get_field_type	// R40
-					cache_get_value_index_int(row_index, column_index, dest_array[array_row][data_offset]);
-					#else	// <=R39
-					dest_array[array_row][data_offset] = cache_get_row_int(row_index, column_index, db_handle);
-					#endif
+					PTH_MYSQL_FIELDID_GETINT(row_index, column_index, dest_array[array_row][data_offset], db_handle);
 				} else if( data_type == 'f' ) {
-					#if defined cache_get_field_type	// R40
-					cache_get_value_index_float(row_index, column_index, Float:dest_array[array_row][data_offset]);
-					#else	// <=R39
-					dest_array[array_row][data_offset] = _:cache_get_row_float(row_index, column_index, db_handle);
-					#endif
+					PTH_MYSQL_FIELDID_GETFLOAT(row_index, column_index, dest_array[array_row][data_offset], db_handle);
 				} else if( data_type == 's' ) {
 					data_size =		table_info[column_index][E_TABLEDATA_SIZE];
-					#if defined cache_get_field_type	// R40
-					cache_get_value_index(row_index, column_index, dest_array[array_row][data_offset], data_size);
-					#else	// <=R39
-					cache_get_row(row_index, column_index, dest_array[array_row][data_offset], db_handle, data_size);
-					#endif
+					if( data_options & E_TABLEHANDLER_OPTION_PACK ) {
+						PTH_MYSQL_FIELDID_GETSTR(row_index, column_index, string_buffer, db_handle, sizeof(string_buffer));
+						strpack(dest_array[array_row][data_offset], string_buffer, data_size);
+					} else {
+						PTH_MYSQL_FIELDID_GETSTR(row_index, column_index, dest_array[array_row][data_offset], db_handle, data_size);
+					}
 				}
 				column_index++;
 			}
@@ -152,13 +143,10 @@ stock TableHandler_DB_parseContent(
 		data_type,
 		data_offset,
 		data_size,
+		e_tablehanlder_option:data_options,
 		count_items = 0
 	;
-	#if(defined cache_get_field_type)
-	cache_get_row_count(rows_number);
-	#else
-	rows_number = cache_get_row_count(db_handle);
-	#endif
+	PTH_MYSQL_GET_ROWCOUNT(rows_number, db_handle);
 	#if(!defined TABLEHANDLER_STRUCTTEST_DISABLE)
 	if( error_counter ) {
 		printf("[TableHandler_DB_parseContent(%s)] cant load table from query result due to the problems in table structure (found %d errors)!", table_name, error_counter);
@@ -168,11 +156,7 @@ stock TableHandler_DB_parseContent(
 	for(row_index = 0; row_index < rows_number; ++row_index) {
 		column_index = is_indexed;
 		if( is_indexed ) {
-			#if(defined cache_get_field_type)
-			cache_get_value_name_int(row_index, table_info[0][E_TABLEDATA_DB_FIELD_NAME], array_row);
-			#else
-			array_row = cache_get_field_content_int(row_index, table_info[0][E_TABLEDATA_DB_FIELD_NAME], db_handle);
-			#endif
+			PTH_MYSQL_FIELDNAME_GETINT(row_index, table_info[0][E_TABLEDATA_DB_FIELD_NAME], array_row, db_handle);
 		} else {
 			array_row++;
 		}
@@ -180,25 +164,19 @@ stock TableHandler_DB_parseContent(
 			while( column_index < table_info_size ) {
 				data_type =		table_info[column_index][E_TABLEDATA_TYPE];
 				data_offset =	table_info[column_index][E_TABLEDATA_OFFSET];
+				data_options =	e_tablehanlder_option:table_info[column_index][E_TABLEDATA_OPTIONS];
 				if( data_type == 'd' || data_type == 'h' ) {
-					#if(defined cache_get_field_type)
-					cache_get_value_name_int(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], dest_array[array_row][data_offset]);
-					#else
-					dest_array[array_row][data_offset] = cache_get_field_content_int(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], db_handle);
-					#endif
+					PTH_MYSQL_FIELDNAME_GETINT(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], dest_array[array_row][data_offset], db_handle);
 				} else if( data_type == 'f' ) {
-					#if(defined cache_get_field_type)
-					cache_get_value_name_float(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], Float:dest_array[array_row][data_offset]);
-					#else
-					dest_array[array_row][data_offset] = _:cache_get_field_content_float(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], db_handle);
-					#endif
+					PTH_MYSQL_FIELDNAME_GETFLOAT(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], dest_array[array_row][data_offset], db_handle);
 				} else if( data_type == 's' ) {
 					data_size =		table_info[column_index][E_TABLEDATA_SIZE];
-					#if(defined cache_get_field_type)
-					cache_get_value_name(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], dest_array[array_row][data_offset], data_size);
-					#else
-					cache_get_field_content(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], dest_array[array_row][data_offset], db_handle, data_size);
-					#endif
+					if( data_options & E_TABLEHANDLER_OPTION_PACK ) {
+						PTH_MYSQL_FIELDNAME_GETSTR(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], string_buffer, db_handle, sizeof(string_buffer));
+						strpack(dest_array[array_row][data_offset], string_buffer, data_size);
+					} else {
+						PTH_MYSQL_FIELDNAME_GETSTR(row_index, table_info[column_index][E_TABLEDATA_DB_FIELD_NAME], dest_array[array_row][data_offset], db_handle, data_size);
+					}
 				}
 				column_index++;
 			}
